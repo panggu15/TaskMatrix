@@ -1347,6 +1347,7 @@ class ConversationBot:
         res['output'] = res['output'].replace("\\", "/")
         response = re.sub('(image/[-\w]*.png)', lambda m: f'![](file={m.group(0)})*{m.group(0)}*', res['output'])
         state = state + [(text, response)]
+        print(response, '----------------')
         print(f"\nProcessed run_text, Input text: {text}\nCurrent state: {state}\n"
               f"Current Memory: {self.agent.memory.buffer}")
         return state, state
