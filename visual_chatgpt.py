@@ -772,7 +772,6 @@ class NormalText2Image:
 class ImageVariation:
     def __init__(self, device):
         print(f"Initializing ImageVariation to {device}")
-        self.torch_dtype = torch.float16 if 'cuda' in device else torch.float32
         self.tform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Resize(
