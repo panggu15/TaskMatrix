@@ -800,7 +800,7 @@ class ImageVariation:
         image = Image.open(inputs)
         self.seed = random.randint(0, 65535)
         seed_everything(self.seed)
-        inp = self.tform(im).to(self.device).unsqueeze(0)
+        inp = self.tform(image).to(self.device).unsqueeze(0)
         out = pipe(inp, guidance_scale=3)
         updated_image_path = get_new_image_name(inputs, func_name="variation")
         out["images"][0].save(updated_image_path)
