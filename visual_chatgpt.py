@@ -3,6 +3,7 @@ import os
 import gradio as gr
 import random
 import torch
+from torchvision import transforms
 import cv2
 import re
 import uuid
@@ -16,7 +17,7 @@ from transformers import CLIPSegProcessor, CLIPSegForImageSegmentation
 from transformers import pipeline, BlipProcessor, BlipForConditionalGeneration, BlipForQuestionAnswering
 from transformers import AutoImageProcessor, UperNetForSemanticSegmentation
 
-from diffusers import StableDiffusionPipeline, StableDiffusionInpaintPipeline, StableDiffusionInstructPix2PixPipeline
+from diffusers import StableDiffusionPipeline, StableDiffusionInpaintPipeline, StableDiffusionInstructPix2PixPipeline, StableDiffusionImageVariationPipeline
 from diffusers import EulerAncestralDiscreteScheduler
 from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
 from controlnet_aux import OpenposeDetector, MLSDdetector, HEDdetector
@@ -768,6 +769,45 @@ class NormalText2Image:
               f"Output Image: {updated_image_path}")
         return updated_image_path
 
+class ImageVariation:
+    def __init__(self, device):
+        print(f"Initializing ImageVariation to {device}")
+        self.torch_dtype = torch.float16 if 'cuda' in device else torch.float32
+        self.tform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Resize(
+                (224, 224),
+                interpolation=transforms.InterpolationMode.BICUBIC,
+                antialias=False,
+                ),
+            transforms.Normalize(
+              [0.48145466, 0.4578275, 0.40821073],
+              [0.26862954, 0.26130258, 0.27577711]),
+        ])
+        self.pipe = StableDiffusionImageVariationPipeline.from_pretrained(
+              "lambdalabs/sd-image-variations-diffusers",
+              revision="v2.0",
+        )
+        self.pipe.to(device)
+        self.device = device
+        self.seed = -1
+
+    @prompts(name="Generate Image Variations",
+             description="useful when you want to generate a new image similar to a basic image. "
+                         "like: generate a real image similar to this image, "
+                         "or generate a new real image similar to this image. "
+                         "The input to this tool should be a string, representing the image_path")
+    def inference(self, inputs):
+        image = Image.open(inputs)
+        self.seed = random.randint(0, 65535)
+        seed_everything(self.seed)
+        inp = self.tform(im).to(self.device).unsqueeze(0)
+        out = pipe(inp, guidance_scale=3)
+        updated_image_path = get_new_image_name(inputs, func_name="variation")
+        out["images"][0].save(updated_image_path)
+        print(f"\nProcessed ImageVariation, Input Image: {inputs}, Output Variation: {updated_image_path}")
+        return updated_image_path
+    
 
 class VisualQuestionAnswering:
     def __init__(self, device):
