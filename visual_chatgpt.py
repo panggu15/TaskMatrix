@@ -1348,7 +1348,6 @@ class ConversationBot:
             for e in dir(instance):
                 if e.startswith('inference'):
                     func = getattr(instance, e)
-                    print(func.name)
                     self.tools.append(Tool(name=func.name, description=func.description, func=func))
         self.llm = OpenAI(temperature=0)
         self.memory = ConversationBufferMemory(memory_key="chat_history", output_key='output')
