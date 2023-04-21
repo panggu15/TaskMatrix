@@ -1295,7 +1295,7 @@ class ImageEditing:
     def inference_replace_background_sam(self,inputs):
         image_path, to_be_placed_txt, replace_with_txt = inputs.split(",")
         
-        print(f"image_path={image_path}, to_be_replaced_txt={to_be_placed_txt}")
+        print(f"image_path={image_path}, to_be_placed_txt={to_be_placed_txt}")
         image_pil, image = self.grounding.load_image(image_path)
         boxes_filt, pred_phrases = self.grounding.get_grounding_boxes(image, to_be_placed_txt)
         image = cv2.imread(image_path)
