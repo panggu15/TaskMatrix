@@ -1287,9 +1287,9 @@ class ImageEditing:
             f"Output Image: {updated_image_path}")
         return updated_image_path
     
-    @prompts(name="Replace Something From The Photo",
-            description="useful when you want to replace background except for something from the object description or "
-                        "location with another background from its description. "
+    @prompts(name="Replace Background From The Photo",
+            description="useful when you want to place an object from the object description or "
+                        "location in another background from its description. "
                         "The input to this tool should be a comma separated string of three, "
                         "representing the image_path, the object to be placed, the background to be replaced with ")
     def inference_replace_background_sam(self,inputs):
