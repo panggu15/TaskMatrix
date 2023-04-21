@@ -1286,6 +1286,38 @@ class ImageEditing:
             f"\nProcessed ImageEditing, Input Image: {image_path}, Replace {to_be_replaced_txt} to {replace_with_txt}, "
             f"Output Image: {updated_image_path}")
         return updated_image_path
+    
+    @prompts(name="Replace Something From The Photo",
+            description="useful when you want to replace background except for something from the object description or "
+                        "location with another background from its description. "
+                        "The input to this tool should be a comma separated string of three, "
+                        "representing the image_path, the object to be placed, the background to be replaced with ")
+    def inference_replace_background_sam(self,inputs):
+        image_path, to_be_placed_txt, replace_with_txt = inputs.split(",")
+        
+        print(f"image_path={image_path}, to_be_replaced_txt={to_be_placed_txt}")
+        image_pil, image = self.grounding.load_image(image_path)
+        boxes_filt, pred_phrases = self.grounding.get_grounding_boxes(image, to_be_placed_txt)
+        image = cv2.imread(image_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        self.sam.sam_predictor.set_image(image)
+        masks = self.sam.get_mask_with_boxes(image_pil, image, boxes_filt)
+        mask = torch.sum(masks, dim=0).unsqueeze(0)
+        mask = torch.where(mask > 0, True, False)
+        mask = mask.squeeze(0).squeeze(0).cpu() #tensor
+
+        mask = self.pad_edge(mask,padding=20) #numpy
+        mask_image = Image.fromarray(255 - mask)
+
+        updated_image = self.inpaint(prompt=replace_with_txt, image=image_pil,
+                                     mask_image=mask_image)
+        updated_image_path = get_new_image_name(image_path, func_name="replace-background")
+        updated_image = updated_image.resize(image_pil.size)
+        updated_image.save(updated_image_path)
+        print(
+            f"\nProcessed ImageEditing, Input Image: {image_path}, Replace {to_be_placed_txt} to {replace_with_txt}, "
+            f"Output Image: {updated_image_path}")
+        return updated_image_path
 
 
 class ConversationBot:
